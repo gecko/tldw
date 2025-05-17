@@ -25,11 +25,11 @@ Forked from [here](https://github.com/stong/tldw) and adapted to run using `olla
 
 ## Backend
 - `.\venv\Scripts\activate.bat`
-- `python backend.py --port 5000 --model llama3.2:latest`
-- if you change the port from 5000, you will need to adapt the port accordingly in the src/App.tsx file.
+- `python backend.py --model llama3.2:latest`
+- if you change the port from its default 5000, you will need to adapt the port accordingly in the src/App.tsx file.
 
 
 ## Frontend
 - `cd youtube-summarizer`
-- `yarn dev`
-- Go to `http://localhost:5173`
+- `yarn dev --port 80` (without port, the default is pot 5173)
+- Go to `http://localhost`
