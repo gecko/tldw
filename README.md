@@ -7,13 +7,13 @@ Forked from [here](https://github.com/stong/tldw) and adapted to run using `olla
 
 # Build (under Windows)
 
-## Backend
+### Backend
 - `python -m venv venv`
 - `.\venv\Scripts\activate.bat`
 - `pip install -r requirements.txt`
 
 
-## Frontend
+### Frontend
 - get [node.js with npm](https://nodejs.org/en/download/)
 - install yarn: `npm i -g yarn`
 - `cd youtube-summarizer`
@@ -22,14 +22,17 @@ Forked from [here](https://github.com/stong/tldw) and adapted to run using `olla
 
 
 # Run
+After installing everthing, you can either double-click the `tldw.bat` script (adapt paths to your computer) to start front- and backend.
 
-## Backend
+Or you can run them from terminal individually:
+
+### Backend
 - `.\venv\Scripts\activate.bat`
 - `python backend.py --model llama3.2:latest`
 - if you change the port from its default 5000, you will need to adapt the port accordingly in the src/App.tsx file.
 
 
-## Frontend
+### Frontend
 - `cd youtube-summarizer`
 - `yarn dev --port 80` (without port, the default is pot 5173)
 - Go to `http://localhost`
