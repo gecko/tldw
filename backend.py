@@ -9,7 +9,6 @@ from youtube import VideoExtractor, Summarizer, validate_youtube_url
 import traceback
 
 app = Flask(__name__)
-app.config['PROXY_URL'] = None  # Default value
 app.config['MAX_VIDEO_DURATION'] = int(os.getenv('MAX_VIDEO_DURATION', 7200))  # 2 hours in seconds
 
 cors = CORS(app)  # Enable CORS for all routes
@@ -18,7 +17,6 @@ cors = CORS(app)  # Enable CORS for all routes
 CORS(app, resources={
     r"/api/*": {
         "origins": [
-            "https://tldw.tube",
             "http://localhost:5173", # for local development
         ],
         "methods": ["GET", "POST", "OPTIONS"],
@@ -73,8 +71,8 @@ def summarize_video():
         }), 400
     
     try:
-        extractor = VideoExtractor(proxy=app.config['PROXY_URL'])
-        summarizer = Summarizer()
+        extractor = VideoExtractor()
+        summarizer = Summarizer(model=app.config['MODEL'])
 
         # Download metadata
         video_info = extractor.extract_video_info(url)
@@ -153,11 +151,11 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description='Server configuration')
     parser.add_argument('--port', type=int, default=5000, help='Port number (default: 5000)')
-    parser.add_argument('--proxy', default=os.getenv('PROXY_URL'), help='Proxy URL (default: PROXY_URL environment variable or None)')
+    parser.add_argument('--model', default=os.getenv('MODEL'), help='Name of the ollama model (default: MODEL environment variable in .env file.)')
     parser.add_argument('--max-duration', type=int, default=app.config['MAX_VIDEO_DURATION'],
                        help='Maximum video duration in seconds (default: MAX_VIDEO_DURATION environment variable or 7200)')
     args = parser.parse_args()
-    app.config['PROXY_URL'] = args.proxy
     app.config['MAX_VIDEO_DURATION'] = args.max_duration
-    print(f'Serving on port {args.port}')
+    app.config['MODEL'] = args.model
+    print(f'Serving on port {args.port} with max duration {args.max_duration} seconds and model {args.model}')
     serve(app, host="0.0.0.0", port=args.port)

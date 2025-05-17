@@ -193,32 +193,6 @@ function VideoSummary() {
             </div>
           )}
         </div>
-        <div className="bottom-2 w-full text-center">
-          <a
-            href="https://github.com/stong/tldw"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-400 transition-colors mx-2"
-          >
-            GitHub
-          </a>
-          <a
-            href="https://zellic.io"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-400 transition-colors mx-2"
-          >
-            Zellic
-          </a>
-          <a
-            href="https://pwn.cat"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-400 transition-colors mx-2"
-          >
-            About
-          </a>
-        </div>
       </div>
     </div>
   );

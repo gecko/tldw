@@ -29,7 +29,7 @@ def validate_youtube_url(url: str) -> bool:
         return False
 
 class VideoExtractor:
-    def __init__(self, proxy: Optional[str] = None):
+    def __init__(self, ):
         ensure_cache_dir()
 
         self.ydl_opts = {
@@ -42,10 +42,6 @@ class VideoExtractor:
             'no_warnings': False,
             'no-playlist': True
         }
-
-        if proxy:
-            print(f'Setting proxy: {proxy[:10]}...')
-            self.ydl_opts['proxy'] = proxy
 
     def get_captions_by_priority(self, info: Dict) -> Optional[Dict]:
         """
@@ -304,8 +300,14 @@ class VideoExtractor:
         return video_info
 
 class Summarizer:
-    def __init__(self):
-        self.client = OpenAI()
+    def __init__(self, model):
+        self.client = OpenAI(
+            base_url = 'http://localhost:11434/v1',
+            api_key = os.getenv('OPENAI_API_KEY'),
+        )
+        self.modelname = model
+        if not self.modelname:
+            raise ValueError('Model name is required')
         ensure_cache_dir()
 
     def summarize(self, text, video_info):
@@ -325,7 +327,7 @@ class Summarizer:
         ]
         
         completion = self.client.chat.completions.create(
-            model="gpt-4o-mini",
+            model=self.modelname,
             store=True,
             messages=messages,
         )
@@ -337,7 +339,7 @@ class Summarizer:
         messages.append({"role": "user", "content": "Now summarize it into a single sentence. Focus on the overall or underlying takeaway, cause, reason, or answer BEYOND what's already in the title and description, which is already shown to the user. Basically, provide a single sentence answer to the question the video poses. PROVIDE NO OTHER OUTPUT OTHER THAN THE SENTENCE."})
 
         completion = self.client.chat.completions.create(
-            model="gpt-4o-mini",
+            model=self.modelname,
             store=True,
             messages=messages,
         )
@@ -349,7 +351,7 @@ class Summarizer:
         messages.append({"role": "user", "content": f'Rephrase the video title into a single motivating question. Focus on the overall TOPIC or SUBJECT of the video. This could be just the video title verbatim, especially if it is already a question. Don\'t use information outside of the video title. For example, if the title is "This problem ...", the question would be "What problem ...?". As a reminder, here is the video title again: "{video_title}". PROVIDE NO OTHER OUTPUT OTHER THAN THE QUESTION.'})
 
         completion = self.client.chat.completions.create(
-            model="gpt-4o",
+            model=self.modelname,
             store=True,
             messages=messages,
         )
@@ -361,7 +363,7 @@ class Summarizer:
         messages.append({"role": "user", "content": 'Answer the question we just asked with just a single phrase, ideally one or two words. Examples: "Is EVOLUTION REAL?" -> "Yes." "Have scientists achieved fusion?" -> "No." "It depends." "Will AI take over the world?" -> "Nobody knows." "Why NO ONE lives here" -> "Poor geography." "Inside Disney\'s $1 BILLION disaster" -> "No market need." "Scientists FEAR this one thing" -> "Climate change." "Why is there war in the middle east?" -> "It\'s complicated." "Have we unlocked the secret to QUANTUM COMPUTING?" -> "Not really." "A day from Hell" -> "1999 Moore tornado" ... -> "Mostly." ... -> "Usually." PROVIDE NO OTHER OUTPUT OTHER THAN THE WORD(S) OF THE ANSWER.'})
 
         completion = self.client.chat.completions.create(
-            model="gpt-4o",
+            model=self.modelname,
             store=True,
             messages=messages,
         )
@@ -373,7 +375,7 @@ class Summarizer:
         messages.append({"role": "user", "content": 'Now suggest a search term for a Wikipedia search that replaces watching the video. Make the search SPECIFIC to the TOPIC of the video. For example: "The $6 Billion Transit Project with No Ridership" -> "FasTracks"; "Why NOBODY lives in this part of China" -> "Gobi Desert"; "This unknown professor REVOLUTIONIZED ..." -> "Joseph-Louis Lagrange"; "Every Computer Can Be Hacked!" -> "Zero-Day Vulnerability"; Provide the Wikipedia page name with no special punctuation:'})
 
         completion = self.client.chat.completions.create(
-            model="gpt-4o",
+            model=self.modelname,
             store=True,
             messages=messages,
         )
@@ -394,11 +396,11 @@ def main():
     parser = argparse.ArgumentParser(description='Extract YouTube video information')
     parser.add_argument('url', help='YouTube video URL')
     parser.add_argument('--output', '-o', help='Output file path (optional)')
-    parser.add_argument('--proxy', '-x', help='Proxy URL (optional)')
+    parser.add_argument('--model', '-m', help='LLM model (default is set in .env file)')
     args = parser.parse_args()
 
-    extractor = VideoExtractor(proxy=args.proxy)
-    summarizer = Summarizer()
+    extractor = VideoExtractor()
+    summarizer = Summarizer(model=args.model)
 
     # Download metadata
     video_info = extractor.extract_video_info(args.url)
@@ -410,7 +412,7 @@ def main():
     # Get captions
     caption_track = extractor.get_captions_by_priority(video_info)
     ext = caption_track['ext']
-    print(f'Using captions track: {caption_track['name']} ({ext})')
+    print(f"Using captions track: {caption_track['name']} ({ext})")
     
     # Download captions
     downloaded_content = extractor.download_captions(video_id, caption_track)
