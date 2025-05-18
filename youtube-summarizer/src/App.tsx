@@ -46,6 +46,10 @@ function VideoSummary() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [followupQuestion, setFollowupQuestion] = useState("");
+  const [followupLoading, setFollowupLoading] = useState(false);
+  const [followupError, setFollowupError] = useState("");
+  const [followupAnswer, setFollowupAnswer] = useState("");
 
   // Handle URL changes (including back/forward navigation)
   useEffect(() => {
@@ -125,7 +129,7 @@ function VideoSummary() {
     <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 dark:text-zinc-200 py-12 px-4">
       <div className="max-w-3xl mx-auto">
         <div className="pb-12">
-          <h1 className="text-4xl font-bold text-center mb-12"><a href="/">TL;DW</a></h1>
+          <h1 className="text-4xl font-bold text-center mb-12"><a href="/">TL;DW - Summarize a YouTube Video for me</a></h1>
           {/* Input Form */}
           <form onSubmit={handleSubmit} className="flex justify-center gap-2 mb-8">
             <input
@@ -190,6 +194,70 @@ function VideoSummary() {
                 <h2 className="text-2xl font-bold mb-2">Full summary</h2>
                 <p className="text-gray-600 dark:text-zinc-400 text-justify hyphens-auto">{summary.paragraph}</p>
               </div>
+              {/* Follow-up Question Section */}
+              <div className="pt-6 border-t border-gray-200 dark:border-zinc-700">
+                <form
+                  className="flex flex-col gap-2"
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!followupQuestion.trim()) return;
+                    setFollowupLoading(true);
+                    setFollowupError("");
+                    setFollowupAnswer("");
+                    try {
+                      const response = await fetch(`${getApiBaseUrl()}/api/chat`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          video_id: videoInfo.video_id,
+                          question: followupQuestion,
+                        }),
+                      });
+                      const data = await response.json();
+                      if (!response.ok) {
+                        throw new Error((data && data.error) || "Failed to get answer");
+                      }
+                      setFollowupAnswer(data.answer || "No answer returned.");
+                    } catch (err: any) {
+                      setFollowupError(err.message);
+                    } finally {
+                      setFollowupLoading(false);
+                    }
+                  }}
+                >
+                  <label className="font-semibold" htmlFor="followup">Ask a follow-up question about this video:</label>
+                  <div className="flex gap-2">
+                    <input
+                      id="followup"
+                      type="text"
+                      value={followupQuestion}
+                      onChange={e => setFollowupQuestion(e.target.value)}
+                      placeholder="Type your question..."
+                      className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 dark:focus:ring-blue-600 dark:placeholder:text-zinc-500"
+                      disabled={followupLoading}
+                    />
+                    <button
+                      type="submit"
+                      className="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors dark:bg-blue-700 dark:hover:bg-blue-600 dark:disabled:bg-zinc-700 dark:disabled:text-zinc-400"
+                      disabled={followupLoading || !followupQuestion.trim()}
+                    >
+                      Ask
+                    </button>
+                  </div>
+                </form>
+                {followupLoading && (
+                  <div className="text-blue-500 mt-2">Thinking...</div>
+                )}
+                {followupError && (
+                  <div className="text-red-500 mt-2">{followupError}</div>
+                )}
+                {followupAnswer && !followupLoading && !followupError && (
+                  <div className="mt-4 p-4 rounded-lg bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700">
+                    <span className="font-semibold">Answer:</span> {followupAnswer}
+                  </div>
+                )}
+              </div>
+              {/* End Follow-up Section */}
             </div>
           )}
         </div>

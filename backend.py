@@ -5,8 +5,13 @@ import time
 import dotenv
 from typing import Optional, Dict, Any
 import os
+import json
+import gzip
 from youtube import VideoExtractor, Summarizer, validate_youtube_url
 import traceback
+
+CACHE_DIR = './cache'
+
 
 app = Flask(__name__)
 app.config['MAX_VIDEO_DURATION'] = int(os.getenv('MAX_VIDEO_DURATION', 7200))  # 2 hours in seconds
@@ -53,8 +58,48 @@ def rate_limit(limit=5):  # 60 requests per minute by default
 def health_check():
     return jsonify({"status": "healthy"}), 200
 
+
+def get_cached_caption(video_id: str) -> str:
+    cache_file = os.path.join(CACHE_DIR, video_id + '.caption.txt.gz')
+    if os.path.isfile(cache_file):
+        cached_stuff = gzip.open(cache_file, 'rt').read()
+        return cached_stuff
+    return None
+
+
+@app.route('/api/chat', methods=['POST'])
+def chat():
+    try:
+        data = request.get_json()
+        vid_id = data.get('video_id')
+        message = data['question']
+
+        captions = get_cached_caption(vid_id)
+        summarizer = Summarizer(model=app.config['MODEL'])
+        response = summarizer.answer(message, captions)
+        
+        if not response:
+            return jsonify({
+                "error": "Failed to get response"
+            }), 500
+        
+        return jsonify({
+            "success": True,
+            "answer": response
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f"Error processing chat: {str(e)}")
+        app.logger.error(traceback.format_exc())
+        return jsonify({
+            "error": f"An error occurred: {str(e)}"
+        }), 500
+
+
+
+
 @app.route('/api/summarize', methods=['POST'])
-@rate_limit()
+# @rate_limit()
 def summarize_video():
     data = request.get_json()
     
@@ -108,8 +153,13 @@ def summarize_video():
         # Parse captions
         caption_text = extractor.parse_captions(ext, downloaded_content)
 
+        # save caption text to cache
+        cache_file = os.path.join(CACHE_DIR, video_id + '.caption.txt.gz')
+        with gzip.open(cache_file, 'wt') as f:
+            f.write(caption_text)
+
         print(f'Caption length: {len(caption_text)}')
-        
+
         # Generate summaries
         summaries = summarizer.summarize(caption_text, video_info)
 

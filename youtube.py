@@ -310,6 +310,23 @@ class Summarizer:
             raise ValueError('Model name is required')
         ensure_cache_dir()
 
+
+    def answer(self, message, captions):
+        messages=[
+            {"role": "user", "content": f"Answer the question based on the following subtitles. Do not describe or mention the video itself. Simply answer the question. Focus on the overall or underlying takeaway, cause, reason, or answer BEYOND what's already in the title and description, which is already shown to the user. PROVIDE NO OTHER OUTPUT OTHER THAN THE ANSWER.\nSubtitles follow:"},
+            {"role": "user", "content": f"<SUBTITLES>\n{captions}</SUBTITLES>\n\n<QUESTION>\n{message}\n</QUESTION>"},
+        ]
+        
+        completion = self.client.chat.completions.create(
+            model=self.modelname,
+            store=True,
+            messages=messages,
+        )
+        return completion.choices[0].message.content
+
+
+
+
     def summarize(self, text, video_info):
         video_id = video_info['id']
         video_title = video_info['fulltitle']
@@ -334,7 +351,7 @@ class Summarizer:
         message = completion.choices[0].message
         summaries['paragraph'] = message.content
         messages.append({"role": "assistant", "content": message.content})
-        print(message.content)
+        # print(message.content)
 
         messages.append({"role": "user", "content": "Now summarize it into a single sentence. Focus on the overall or underlying takeaway, cause, reason, or answer BEYOND what's already in the title and description, which is already shown to the user. Basically, provide a single sentence answer to the question the video poses. PROVIDE NO OTHER OUTPUT OTHER THAN THE SENTENCE."})
 
@@ -346,7 +363,7 @@ class Summarizer:
         message = completion.choices[0].message
         summaries['sentence'] = message.content
         messages.append({"role": "assistant", "content": message.content})
-        print(message.content)
+        # print(message.content)
 
         messages.append({"role": "user", "content": f'Rephrase the video title into a single motivating question. Focus on the overall TOPIC or SUBJECT of the video. This could be just the video title verbatim, especially if it is already a question. Don\'t use information outside of the video title. For example, if the title is "This problem ...", the question would be "What problem ...?". As a reminder, here is the video title again: "{video_title}". PROVIDE NO OTHER OUTPUT OTHER THAN THE QUESTION.'})
 
@@ -358,7 +375,7 @@ class Summarizer:
         message = completion.choices[0].message
         summaries['question'] = message.content
         messages.append({"role": "assistant", "content": message.content})
-        print(message.content)
+        # print(message.content)
 
         messages.append({"role": "user", "content": 'Answer the question we just asked with just a single phrase, ideally one or two words. Examples: "Is EVOLUTION REAL?" -> "Yes." "Have scientists achieved fusion?" -> "No." "It depends." "Will AI take over the world?" -> "Nobody knows." "Why NO ONE lives here" -> "Poor geography." "Inside Disney\'s $1 BILLION disaster" -> "No market need." "Scientists FEAR this one thing" -> "Climate change." "Why is there war in the middle east?" -> "It\'s complicated." "Have we unlocked the secret to QUANTUM COMPUTING?" -> "Not really." "A day from Hell" -> "1999 Moore tornado" ... -> "Mostly." ... -> "Usually." PROVIDE NO OTHER OUTPUT OTHER THAN THE WORD(S) OF THE ANSWER.'})
 
@@ -370,7 +387,7 @@ class Summarizer:
         message = completion.choices[0].message
         summaries['word'] = message.content
         messages.append({"role": "assistant", "content": message.content})
-        print(message.content)
+        # print(message.content)
 
         messages.append({"role": "user", "content": 'Now suggest a search term for a Wikipedia search that replaces watching the video. Make the search SPECIFIC to the TOPIC of the video. For example: "The $6 Billion Transit Project with No Ridership" -> "FasTracks"; "Why NOBODY lives in this part of China" -> "Gobi Desert"; "This unknown professor REVOLUTIONIZED ..." -> "Joseph-Louis Lagrange"; "Every Computer Can Be Hacked!" -> "Zero-Day Vulnerability"; Provide the Wikipedia page name with no special punctuation:'})
 
@@ -383,7 +400,7 @@ class Summarizer:
         summaries['word'] += f' ({message.content})'
         summaries['wikipedia'] = 'https://en.wikipedia.org/w/index.php?search=' + quote_plus(message.content)
         messages.append({"role": "assistant", "content": message.content})
-        print(message.content)
+        # print(message.content)
 
         with gzip.open(cache_file, 'wt') as f:
             json.dump(summaries, f, indent=4)
@@ -420,10 +437,10 @@ def main():
     # Download and parse captions
     caption_text = extractor.parse_captions(ext, downloaded_content)
 
-    print(caption_text)
+    # print(caption_text)
 
     summaries = summarizer.summarize(caption_text, video_info)
-    print(summaries)
+    # print(summaries)
 
 
 if __name__ == "__main__":
