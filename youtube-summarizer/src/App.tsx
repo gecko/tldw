@@ -256,7 +256,7 @@ function VideoSummary() {
                 )}
                 {followupAnswer && !followupLoading && !followupError && (
                   <div className="mt-4 p-4 rounded-lg bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700">
-                    <span className="font-semibold">Answer:</span> {followupAnswer}
+                    <span className="font-semibold">Answer:</span> <div className="prose dark:prose-invert max-w-none inline"><ReactMarkdown children={followupAnswer} /></div>
                   </div>
                 )}
               </div>
