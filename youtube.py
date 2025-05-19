@@ -338,7 +338,10 @@ class Summarizer:
             return json.load(gzip.open(cache_file, 'rt'))
 
         summaries = {}
-        messages=[
+        messages=[]
+        # if True:
+        #     messages.append({"role": "system", "content": "Although the subtitles are in English and the following questions are in English please ALWAYS ANSWER IN GERMAN."})
+        messages += [
             {"role": "user", "content": f"Summarize this video given its subtitles into increasing levels of conciseness. Begin by summarizing it into a single paragraph.\nTitle: {video_title}\nDescription:\n```{video_description}```\n\nDo not describe or mention the video itself. Simply summarize the points it makes. Focus on the overall or underlying takeaway, cause, reason, or answer BEYOND what's already in the title and description, which is already shown to the user. PROVIDE NO OTHER OUTPUT OTHER THAN THE PARAGRAPH.\nSubtitles follow:"},
             {"role": "user", "content": text}
         ]

@@ -33,6 +33,7 @@ This is what the summary followed by a question looks like:
 - Preliminaries:
     - get [node.js with npm](https://nodejs.org/en/download/)
     - install yarn: `npm i -g yarn`
+    - install react-markdown `npm install react-markdown@latest`
 - Set up the frontend script
     - `cd youtube-summarizer`
     - `yarn install`

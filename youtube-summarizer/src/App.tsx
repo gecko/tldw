@@ -6,6 +6,7 @@ import {
   Route,
   useSearchParams,
 } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 
 interface Summary {
   word: string;
@@ -192,7 +193,9 @@ function VideoSummary() {
               {/* Paragraph Summary */}
               <div>
                 <h2 className="text-2xl font-bold mb-2">Full summary</h2>
-                <p className="text-gray-600 dark:text-zinc-400 text-justify hyphens-auto">{summary.paragraph}</p>
+                <div className="prose dark:prose-invert max-w-none">
+                  <ReactMarkdown>{summary.paragraph}</ReactMarkdown>
+                </div>
               </div>
               {/* Follow-up Question Section */}
               <div className="pt-6 border-t border-gray-200 dark:border-zinc-700">
