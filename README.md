@@ -33,7 +33,7 @@ This is what the summary followed by a question looks like:
 - Preliminaries:
     - get [node.js with npm](https://nodejs.org/en/download/)
     - install yarn: `npm i -g yarn`
-    - install react-markdown `npm install react-markdown@latest`
+    - ## install react-markdown `npm install react-markdown@latest`
 - Set up the frontend script
     - `cd youtube-summarizer`
     - `yarn install`
@@ -55,3 +55,13 @@ Or you can run them from terminal individually:
 - `cd youtube-summarizer`
 - `yarn dev --port 80` (without port, the default is pot 5173)
 - Go to `http://localhost`
+
+
+
+### Updating
+
+- Open `CMD` (not CMDR!)
+- Go to the directory: `cd C:\Users\danie\Desktop\Code\tldw`
+- Activate the venv: `.\venv\Scripts\activate.bat`
+- Update the youtube downloader: `pip install --upgrade yt-dlp`
+- Update the webvtt package: `pip install --upgrade webvtt-py`

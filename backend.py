@@ -147,15 +147,24 @@ def summarize_video():
         
         app.logger.info(f'Using captions track: {caption_track["name"]} ({ext})')
         
-        # Download captions
-        downloaded_content = extractor.download_captions(video_id, caption_track)
-        
-        # Parse captions
-        caption_text = extractor.parse_captions(ext, downloaded_content)
+        try:
+            # Download captions
+            downloaded_content = extractor.download_captions(video_id, caption_track)
+            # Parse captions
+            caption_text = extractor.parse_captions(ext, downloaded_content)
+        except Exception as e:
+            print(f'Error downloading captions. Retrying...')
+            # Download captions
+            downloaded_content = extractor.download_captions(video_id, caption_track, force_dl=True)
+            # Parse captions
+            caption_text = extractor.parse_captions(ext, downloaded_content)
+
 
         # save caption text to cache
         cache_file = os.path.join(CACHE_DIR, video_id + '.caption.txt.gz')
-        with gzip.open(cache_file, 'wt') as f:
+        with gzip.open(cache_file, 'wt', encoding='utf-8') as f:
+            # cast content to utf-8 and ignore unknown characters
+            cache_file = cache_file.encode('utf-8', 'ignore').decode('utf-8')
             f.write(caption_text)
 
         print(f'Caption length: {len(caption_text)}')

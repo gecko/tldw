@@ -99,12 +99,12 @@ class VideoExtractor:
         # If no compatible format found, fail
         return None
 
-    def download_captions(self, video_id: str, caption_obj: Dict) -> str:
+    def download_captions(self, video_id: str, caption_obj: Dict, force_dl=False) -> str:
         ext = caption_obj['ext']
         url = caption_obj['url']
         cache_file = os.path.join(CACHE_DIR, video_id + '.' + ext + '.gz')
 
-        if os.path.isfile(cache_file):
+        if os.path.isfile(cache_file) and not force_dl:
             return gzip.open(cache_file, 'rt').read()
 
         # Download caption content
@@ -112,8 +112,11 @@ class VideoExtractor:
         response.raise_for_status()
         content = response.text
 
-        with gzip.open(cache_file, 'wt') as f:
+        with gzip.open(cache_file, 'wt', encoding='utf-8') as f:
+            # cast content to utf-8 and ignore unknown characters
+            content = content.encode('utf-8', 'ignore').decode('utf-8')
             f.write(content)
+            
 
         return content
 
@@ -434,13 +437,17 @@ def main():
     ext = caption_track['ext']
     print(f"Using captions track: {caption_track['name']} ({ext})")
     
-    # Download captions
-    downloaded_content = extractor.download_captions(video_id, caption_track)
-    
-    # Download and parse captions
-    caption_text = extractor.parse_captions(ext, downloaded_content)
-
-    # print(caption_text)
+    try:
+        # Download captions
+        downloaded_content = extractor.download_captions(video_id, caption_track)
+        # Download and parse captions
+        caption_text = extractor.parse_captions(ext, downloaded_content)
+    except Exception as e:
+        print("Error downloading captions. Retrying...")
+        # Download captions
+        downloaded_content = extractor.download_captions(video_id, caption_track, force_dl=True)
+        # Download and parse captions
+        caption_text = extractor.parse_captions(ext, downloaded_content)
 
     summaries = summarizer.summarize(caption_text, video_info)
     # print(summaries)
